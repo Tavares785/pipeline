@@ -1,0 +1,83 @@
+version: "3.8"
+
+services:
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    environment:
+      - CLUSTER_NAME=test
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - hdfs_namenode:/hadoop/dfs/name
+    networks:
+      - sparknet
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    volumes:
+      - hdfs_datanode:/hadoop/dfs/data
+    networks:
+      - sparknet
+    depends_on:
+      - namenode
+
+  hive-metastore:
+    image: apache/hive:3.1.3
+    container_name: hive-metastore
+    environment:
+      - SERVICE_NAME=metastore
+      - HIVE_METASTORE_DB_HOST=metastore-db
+    ports:
+      - "9083:9083"
+    networks:
+      - sparknet
+    depends_on:
+      - namenode
+
+  spark:
+    image: bitnami/spark:3.4
+    container_name: spark
+    environment:
+      - SPARK_MODE=driver
+      - SPARK_MASTER_URL=spark://spark:7077
+    volumes:
+      - ./exercicio1.py:/app/exercicio1.py
+    networks:
+      - sparknet
+    depends_on:
+      - namenode
+      - hive-metastore
+    command: ["spark-submit", "/app/exercicio1.py"]
+
+  trino:
+    image: trinodb/trino:latest
+    container_name: trino
+    ports:
+      - "8080:8080"
+    networks:
+      - sparknet
+    depends_on:
+      - hive-metastore
+
+  superset:
+    image: apache/superset:latest
+    container_name: superset
+    ports:
+      - "8088:8088"
+    networks:
+      - sparknet
+    depends_on:
+      - trino
+
+volumes:
+  hdfs_namenode:
+  hdfs_datanode:
+
+networks:
+  sparknet:
+    driver: bridge

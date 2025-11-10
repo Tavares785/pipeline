@@ -4,7 +4,9 @@ TABLE = "lab.db.pessoas"
 
 def ex07_delete_bob(spark: SparkSession) -> None:
     """
-    Remove linhas onde nome = 'Bob'.
+    Remove linhas onde nome = 'Vini'.
     """
-    # TODO
-    raise NotImplementedError
+    spark.sql(f"""
+        DELETE FROM {TABLE}
+        WHERE nome = 'Vini'
+    """)

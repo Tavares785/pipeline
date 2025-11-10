@@ -4,5 +4,5 @@ def ex20_sql_select(spark: SparkSession) -> DataFrame:
     """
     SELECT * FROM lab.db.pessoas
     """
-    # TODO
-    raise NotImplementedError
+    df = spark.sql("SELECT * FROM lab.db.pessoas")
+    return df

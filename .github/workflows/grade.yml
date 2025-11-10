@@ -7,45 +7,47 @@ on:
 
 jobs:
   unit-tests:
-    name: Unit Tests
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    - name: Checkout
+      uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
 
-      - name: Debug - Listar arquivos
-        run: |
-          echo "=== PWD ==="
-          pwd
-          echo "=== Listando raiz ==="
-          ls -R .
+    - name: Instalar dependências
+      run: pip install -r requirements.txt
 
-      - name: Add project to PYTHONPATH
-        run: |
-          echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
-          echo "PYTHONPATH set to $PWD"
+    - name: Instalar Java (OpenJDK 11)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y openjdk-11-jdk
 
-      - name: Install deps
-        run: |
-          pip install -r requirements.txt
-          mkdir -p reports
+    - name: Configurar JAVA_HOME
+      run: echo "JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> $GITHUB_ENV
 
-      - name: Run unit tests
-        run: |
-          pytest tests/unit --maxfail=1 --disable-warnings \
-            --html=reports/unit.html --self-contained-html
+    - name: Instalar PySpark compatível com Python 3.11
+      run: pip install pyspark==3.5.1
 
-      - name: Upload unit report
-        uses: actions/upload-artifact@v4
-        with:
-          name: unit-report
-          path: reports/unit.html
+    - name: Configurar PYSPARK para usar o Python correto
+      run: |
+        echo "PYSPARK_PYTHON=$(which python)" >> $GITHUB_ENV
+        echo "PYSPARK_DRIVER_PYTHON=$(which python)" >> $GITHUB_ENV
+
+    - name: Adicionar 'exercicios' ao PYTHONPATH
+      run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
+
+    - name: Executar Testes Unitários
+      run: pytest tests/unit --maxfail=1 --disable-warnings --html=reports/unit.html --self-contained-html
+
+    - name: Upload Unit Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: unit-test-report
+        path: reports/unit.html
 
   integration-tests:
     name: Integration Tests (Spark + Iceberg + Hive + HDFS)

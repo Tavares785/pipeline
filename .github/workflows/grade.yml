@@ -126,3 +126,28 @@ jobs:
       - name: Shutdown services
         if: always()
         run: docker compose -f docker/docker-compose.grader.yml down -v
+
+      - name: Salvar Nota do Aluno (RA = branch)
+        run: |
+          RA="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          TOTAL=$(pytest tests/integration --maxfail=1 --disable-warnings --quiet 2>&1 | grep -oP '\d+(?= passed|\sfailed)' | head -1)
+          PASSED=$(pytest tests/integration --maxfail=1 --disable-warnings --quiet 2>&1 | grep -oP '\d+(?= passed)' | head -1)
+
+          TOTAL=${TOTAL:-0}
+          PASSED=${PASSED:-0}
+
+          if [ "$TOTAL" -eq 0 ]; then
+            GRADE=0
+          else
+            GRADE=$(awk "BEGIN {printf \"%.2f\", ($PASSED/$TOTAL)*10}")
+          fi
+
+          mkdir -p notas
+          echo "RA,Nota" > notas/${RA}.csv
+          echo "$RA,$GRADE" >> notas/${RA}.csv
+
+      - name: Upload Nota do Aluno
+        uses: actions/upload-artifact@v4
+        with:
+          name: notas
+          path: notas/

@@ -1,8 +1,3 @@
-from pyspark.sql import SparkSession
+spark.sql("CREATE TABLE IF NOT EXISTS lab.db.parquet_table (id INT, nome STRING) USING PARQUET")
 
-def ex16_convert_parquet_to_iceberg(spark: SparkSession, table: str, path: str) -> None:
-    """
-    Converte tabela Parquet em Iceberg SET TBLPROPERTIES('format-version'='2').
-    """
-    # TODO
-    raise NotImplementedError
+spark.sql("ALTER TABLE lab.db.parquet_table SET TBLPROPERTIES ('format-version'='2')")

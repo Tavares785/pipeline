@@ -1,8 +1,2 @@
-from pyspark.sql import SparkSession
-
-def ex18_merge_into(spark: SparkSession) -> None:
-    """
-    Executa MERGE INTO em lab.db.vendas atualizando valores.
-    """
-    # TODO
-    raise NotImplementedError
+df_vendas = spark.sql("SELECT * FROM lab.db.vendas")
+df_vendas.write.mode("overwrite").csv("hdfs://namenode:9000/export/vendas.csv", header=True)

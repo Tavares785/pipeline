@@ -1,8 +1,1 @@
-from pyspark.sql import SparkSession, DataFrame
-
-def ex13_time_travel(spark: SparkSession, version: int) -> DataFrame:
-    """
-    Retorna SELECT * FROM lab.db.vendas VERSION AS OF {version}
-    """
-    # TODO
-    raise NotImplementedError
+spark.sql("SELECT * FROM lab.db.vendas WHERE ano = 2023").show()

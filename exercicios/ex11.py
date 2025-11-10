@@ -1,8 +1,8 @@
-from pyspark.sql import SparkSession
-
-def ex11_history_and_detail(spark: SparkSession) -> dict:
-    """
-    Retorna dicionário: {"history": df_history.count(), "detail": df_detail.collect()}
-    """
-    # TODO
-    raise NotImplementedError
+spark.sql("""
+CREATE TABLE IF NOT EXISTS lab.db.vendas (
+  id INT,
+  valor DOUBLE,
+  ano INT
+) USING ICEBERG
+PARTITIONED BY (ano)
+""")

@@ -1,9 +1,13 @@
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import SparkSession
 
-def ex01_create_df(spark: SparkSession) -> DataFrame:
-    """
-    Deve criar um DataFrame com colunas (id, nome) e 3 linhas.
-    """
-    # TODO: implementar
-    # Ex: return spark.createDataFrame([(1,"Alice"), (2,"Bob"), (3,"Carol")], ["id", "nome"])
-    raise NotImplementedError
+spark = SparkSession.builder \
+    .appName("BigDataLab") \
+    .config("spark.sql.catalog.iceberg", "org.apache.iceberg.spark.SparkCatalog") \
+    .config("spark.sql.catalog.iceberg.type", "hive") \
+    .config("spark.sql.catalog.iceberg.uri", "thrift://hive-metastore:9083") \
+    .config("spark.sql.catalog.iceberg.warehouse", "hdfs://namenode:9000/warehouse") \
+    .getOrCreate()
+
+data = [(1, "Papai123"), (2, "EraUmaVez"), (3, "Kazuma")]
+df = spark.createDataFrame(data, ["id", "nome"])
+df.show()

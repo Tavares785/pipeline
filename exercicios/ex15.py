@@ -1,8 +1,3 @@
-from pyspark.sql import SparkSession
-
-def ex15_create_parquet_table(spark: SparkSession, path: str) -> None:
-    """
-    Cria um DataFrame simples e salva como Parquet.
-    """
-    # TODO
-    raise NotImplementedError
+df2 = spark.createDataFrame([(10, "Daniela"), (11, "Eduardo")], ["id", "nome"])
+df2.writeTo("lab.db.tabela_df").createOrReplace()
+spark.sql("SELECT * FROM lab.db.tabela_df").show()

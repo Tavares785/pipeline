@@ -29,7 +29,15 @@ jobs:
     - name: Configurar JAVA_HOME
       run: echo "JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64" >> $GITHUB_ENV
 
-    - name: Adicionar exercicios ao PYTHONPATH
+    - name: Instalar PySpark compatível com Python 3.11
+      run: pip install pyspark==3.5.1
+
+    - name: Configurar PYSPARK para usar o Python correto
+      run: |
+        echo "PYSPARK_PYTHON=$(which python)" >> $GITHUB_ENV
+        echo "PYSPARK_DRIVER_PYTHON=$(which python)" >> $GITHUB_ENV
+
+    - name: Adicionar 'exercicios' ao PYTHONPATH
       run: echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
 
     - name: Executar Testes Unitários

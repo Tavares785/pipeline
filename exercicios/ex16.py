@@ -4,5 +4,11 @@ def ex16_convert_parquet_to_iceberg(spark: SparkSession, table: str, path: str) 
     """
     Converte tabela Parquet em Iceberg SET TBLPROPERTIES('format-version'='2').
     """
-    # TODO
-    raise NotImplementedError
+    df = spark.read.parquet(path)
+    
+    (
+        df.writeTo(table)
+          .using("iceberg")
+          .tableProperty("format-version", "2")
+          .createOrReplace()
+    )

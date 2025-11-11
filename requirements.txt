@@ -1,4 +1,0 @@
-pytest
-pytest-html
-pyspark==3.3.0
-pyarrow

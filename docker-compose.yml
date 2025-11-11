@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  namenode:
+    image: apache/hadoop:3
+    hostname: namenode
+    command: ["hdfs", "namenode"]
+    ports:
+      - 9870:9870
+      - 9000:9000
+    env_file:
+      - ./hadoop.env
+    environment:
+      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+    volumes:
+      - namenode_data:/tmp/hadoop-root/dfs/name
+
+  datanode:
+    image: apache/hadoop:3
+    command: ["hdfs", "datanode"]
+    env_file:
+      - ./hadoop.env
+    volumes:
+      - datanode_data:/tmp/hadoop-root/dfs/data
+
+  resourcemanager:
+    image: apache/hadoop:3
+    hostname: resourcemanager
+    command: ["yarn", "resourcemanager"]
+    ports:
+      - 8088:8088
+    env_file:
+      - ./hadoop.env
+
+  nodemanager:
+    image: apache/hadoop:3
+    command: ["yarn", "nodemanager"]
+    env_file:
+      - ./hadoop.env
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: metastore
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: hive
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  hive-metastore:
+    image: apache/hive:3.1.3
+    depends_on:
+      - postgres
+    environment:
+      SERVICE_NAME: metastore
+      DB_DRIVER: postgres
+      SERVICE_OPTS: "-Djavax.jdo.option.ConnectionDriverName=org.postgresql.Driver -Djavax.jdo.option.ConnectionURL=jdbc:postgresql://postgres:5432/metastore -Djavax.jdo.option.ConnectionUserName=hive -Djavax.jdo.option.ConnectionPassword=hive"
+    ports:
+      - 9083:9083
+    volumes:
+      - warehouse:/opt/hive/data/warehouse
+
+  trino:
+    image: trinodb/trino:latest
+    ports:
+      - 8080:8080
+    volumes:
+      - ./trino:/etc/trino
+    depends_on:
+      - hive-metastore
+
+  jupyter:
+    image: jupyter/pyspark-notebook:latest
+    ports:
+      - 8888:8888
+    environment:
+      JUPYTER_ENABLE_LAB: "yes"
+      SPARK_OPTS: "--driver-java-options=-Xms1024M --driver-java-options=-Xmx2048M --driver-java-options=-Dlog4j.logLevel=INFO"
+    volumes:
+      - ./exercicios:/home/jovyan/work/exercicios
+      - ./notebooks:/home/jovyan/work/notebooks
+    depends_on:
+      - namenode
+      - hive-metastore
+
+  superset:
+    image: apache/superset:latest
+    ports:
+      - 8088:8088
+    environment:
+      SUPERSET_SECRET_KEY: "your-secret-key"
+    volumes:
+      - superset_data:/app/superset_home
+    depends_on:
+      - trino
+
+volumes:
+  namenode_data:
+  datanode_data:
+  postgres_data:
+  warehouse:
+  superset_data:

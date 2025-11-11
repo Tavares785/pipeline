@@ -6,3 +6,6 @@ def ex18_merge_into(spark: SparkSession) -> None:
     """
     # TODO
     raise NotImplementedError
+
+df = spark.read.format("iceberg").load("lab.db.vendas")
+df.write.csv("hdfs://namenode:9000/export/vendas.csv", header=True)

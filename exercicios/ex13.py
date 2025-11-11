@@ -6,3 +6,6 @@ def ex13_time_travel(spark: SparkSession, version: int) -> DataFrame:
     """
     # TODO
     raise NotImplementedError
+
+SELECT * FROM lab.db.vendas
+WHERE ano = 2023;

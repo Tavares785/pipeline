@@ -6,3 +6,8 @@ def ex09_insert_vendas(spark: SparkSession) -> None:
     """
     # TODO
     raise NotImplementedError
+
+
+UPDATE lab.db.pessoas
+SET nome = 'Alice Silva'
+WHERE nome = 'Alice';

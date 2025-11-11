@@ -6,3 +6,7 @@ def ex08_create_partitioned_table(spark: SparkSession) -> None:
     """
     # TODO
     raise NotImplementedError
+
+
+SELECT COUNT(*) AS total_registros
+FROM lab.db.pessoas;

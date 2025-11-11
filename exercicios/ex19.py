@@ -7,3 +7,7 @@ def ex19_rewrite_data_files(spark: SparkSession) -> None:
     """
     # TODO
     raise NotImplementedError
+
+trino://user@trino-host:8080/iceberg/lab/db
+connector.name=iceberg
+warehouse=hdfs://namenode:9000/warehouse

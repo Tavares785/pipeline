@@ -6,3 +6,13 @@ def ex16_convert_parquet_to_iceberg(spark: SparkSession, table: str, path: str) 
     """
     # TODO
     raise NotImplementedError
+
+CREATE TABLE lab.db.parquet_vendas (
+    id INT,
+    valor DOUBLE,
+    ano INT
+)
+USING PARQUET;
+
+ALTER TABLE lab.db.parquet_vendas
+SET TBLPROPERTIES ('format-version'='2');

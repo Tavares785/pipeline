@@ -8,3 +8,6 @@ def ex07_delete_bob(spark: SparkSession) -> None:
     """
     # TODO
     raise NotImplementedError
+
+
+SELECT * FROM lab.db.pessoas;

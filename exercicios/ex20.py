@@ -6,3 +6,6 @@ def ex20_sql_select(spark: SparkSession) -> DataFrame:
     """
     # TODO
     raise NotImplementedError
+
+SELECT * FROM iceberg.lab.db.pessoas;
+iceberg.lab.db.pessoas

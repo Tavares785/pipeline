@@ -8,3 +8,10 @@ def ex05_insert_and_count(spark: SparkSession) -> int:
     """
     # TODO: implementar
     raise NotImplementedError
+
+
+CREATE TABLE lab.db.pessoas (
+    id INT,
+    nome STRING
+)
+USING ICEBERG;

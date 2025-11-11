@@ -6,3 +6,7 @@ def ex10_select_ano(spark: SparkSession, ano: int) -> DataFrame:
     """
     # TODO
     raise NotImplementedError
+
+
+DELETE FROM lab.db.pessoas
+WHERE nome = 'Carlos';

@@ -7,3 +7,5 @@ def ex17_delete_and_vacuum(spark: SparkSession) -> None:
     """
     # TODO
     raise NotImplementedError
+
+SELECT * FROM lab.db.vendas VERSION AS OF 1;

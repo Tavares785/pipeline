@@ -6,3 +6,14 @@ def ex03_read_csv(spark: SparkSession, input_path: str) -> DataFrame:
     """
     # TODO: implementar
     raise NotImplementedError
+
+
+spark = SparkSession.builder \
+    .appName("Exercicio2") \
+    .getOrCreate()
+
+path = "hdfs://namenode:9000/data/ex1.csv"
+
+df_spark = spark.read.csv(path, header=True, inferSchema=True)
+
+df_spark.show()

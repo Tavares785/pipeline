@@ -10,3 +10,10 @@ def ex04_create_namespace_and_table(spark: SparkSession) -> None:
     """
     # TODO: implementar
     raise NotImplementedError
+
+
+spark = SparkSession.builder \
+    .appName("CriarNamespaceIceberg") \
+    .getOrCreate()
+
+spark.sql("CREATE NAMESPACE IF NOT EXISTS iceberg_catalog.lab.db")

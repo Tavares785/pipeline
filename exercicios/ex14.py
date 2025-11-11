@@ -6,3 +6,6 @@ def ex14_export_vendas_csv(spark: SparkSession, path: str) -> None:
     """
     # TODO
     raise NotImplementedError
+
+DESCRIBE HISTORY lab.db.vendas;
+DESCRIBE DETAIL lab.db.vendas;

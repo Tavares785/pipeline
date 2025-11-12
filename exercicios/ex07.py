@@ -6,5 +6,7 @@ def ex07_delete_bob(spark: SparkSession) -> None:
     """
     Remove linhas onde nome = 'Bob'.
     """
-    # TODO
-    raise NotImplementedError
+    spark.sql(f"""
+        DELETE FROM {TABLE}
+        WHERE nome = 'Bob'
+    """)

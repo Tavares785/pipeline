@@ -1,0 +1,176 @@
+x-spark-base: &spark-base
+  image: apache/spark:3.5.1
+  environment:
+    - SPARK_MASTER=spark://spark-master:7077
+    - SPARK_RPC_AUTHENTICATION_ENABLED=no
+    - SPARK_RPC_ENCRYPTION_ENABLED=no
+    - JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+    - PYSPARK_PYTHON=python3
+    - PYSPARK_DRIVER_PYTHON=python3
+    - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+  volumes:
+    - ./hadoop/conf:/etc/hadoop
+  networks:
+    - data-network
+  depends_on:
+    namenode:
+      condition: service_healthy
+
+services:
+  # HDFS NameNode
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    environment:
+      - CLUSTER_NAME=hadoop-cluster
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - hdfs-namenode:/hadoop/dfs/name
+    networks:
+      - data-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9870"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # HDFS DataNode
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    volumes:
+      - hdfs-datanode:/hadoop/dfs/data
+    depends_on:
+      namenode:
+        condition: service_healthy
+    networks:
+      - data-network
+
+  # Spark Master
+  spark-master:
+    image: apache/spark:3.5.1
+    container_name: spark-master
+    command: >
+      bash -c "/opt/spark/sbin/start-master.sh && tail -f /dev/null"
+    environment:
+      - SPARK_MASTER_HOST=spark-master
+    ports:
+      - "7077:7077"
+      - "8080:8080"
+    networks:
+      - data-network
+
+  spark-worker:
+    image: apache/spark:3.5.1
+    container_name: spark-worker
+    command: >
+      bash -c "/opt/spark/sbin/start-worker.sh spark://spark-master:7077 && tail -f /dev/null"
+    depends_on:
+      - spark-master
+    ports:
+      - "8081:8081"
+    networks:
+      - data-network
+
+  spark-thrift-server:
+    image: apache/spark:3.5.1
+    container_name: spark-thrift-server
+    command: >
+      bash -c "/opt/spark/bin/spark-submit --class org.apache.spark.sql.hive.thriftserver.HiveThriftServer2 --master spark://spark-master:7077 && tail -f /dev/null"
+    depends_on:
+      - spark-master
+      - spark-worker
+    ports:
+      - "10000:10000"
+    networks:
+      - data-network
+
+  # Trino (Presto successor)
+  trino:
+    image: trinodb/trino:latest
+    container_name: trino
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog
+      - ./hadoop/conf:/etc/hadoop
+    networks:
+      - data-network
+    depends_on:
+      - namenode
+      - spark-master
+
+  postgres:
+    image: postgres:14
+    container_name: superset-db
+    environment:
+      - POSTGRES_USER=superset
+      - POSTGRES_PASSWORD=superset
+      - POSTGRES_DB=superset
+    volumes:
+      - superset_db_data:/var/lib/postgresql/data
+    networks:
+      - data-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U superset"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Apache Superset
+  superset:
+    image: apache/superset:latest
+    container_name: superset
+    environment:
+      - SUPERSET_LOAD_EXAMPLES=yes
+      - SUPERSET_SECRET_KEY=supersecret
+      - SUPERSET_DATABASE_URI=postgresql+psycopg2://superset:superset@superset-db:5432/superset
+    depends_on:
+      - trino
+      - postgres
+    ports:
+      - "8088:8088"
+    volumes:
+      - ./superset_home:/app/superset_home
+    command: >
+      /bin/sh -c "
+      superset db upgrade &&
+      superset fab create-admin --username admin --firstname Admin --lastname User --email admin@example.com --password SenhaForte!123 &&
+      superset init &&
+      superset run -h 0.0.0.0 -p 8088"
+    networks:
+      - data-network
+
+  # Jupyter com PySpark + Iceberg + Postgres JDBC
+  jupyter:
+    build:
+      context: ./docker/
+      dockerfile: dockerfile.jupyter
+    container_name: jupyter
+    ports:
+      - "8888:8888"
+      - "4040:4040"
+    volumes:
+      - ./hadoop/conf:/etc/hadoop
+      - ./notebooks:/home/tavares/work
+      - ./data:/home/tavares/data
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+    networks:
+      - data-network
+    depends_on:
+      - spark-master
+      - namenode
+
+networks:
+  data-network:
+
+volumes:
+  hdfs-namenode:
+  hdfs-datanode:
+  superset_db_data:

@@ -1,0 +1,127 @@
+x-spark-base: &spark-base
+  image: bde2020/spark-master:3.3.0-hadoop3.3
+  environment:
+    - SPARK_RPC_AUTHENTICATION_ENABLED=no
+    - SPARK_RPC_ENCRYPTION_ENABLED=no
+    - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+  networks:
+    - data-network
+  depends_on:
+    namenode: { condition: service_healthy }
+
+services:
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    environment:
+      - CLUSTER_NAME=hadoop-cluster
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    volumes:
+      - hdfs-namenode:/hadoop/dfs/name
+    networks:
+      - data-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9870"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  datanode:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode
+    environment:
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
+    volumes:
+      - hdfs-datanode:/hadoop/dfs/data
+    depends_on:
+      namenode:
+        condition: service_healthy
+    networks:
+      - data-network
+
+  spark-master:
+    <<: *spark-base
+    container_name: spark-master
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+
+  spark-worker:
+    <<: *spark-base
+    container_name: spark-worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    depends_on:
+      - spark-master
+
+  spark-thrift-server:
+    <<: *spark-base
+    container_name: spark-thrift-server
+    environment:
+      - SPARK_MODE=thrift
+    ports:
+      - "10000:10000"
+    depends_on:
+      - spark-master
+      - spark-worker 
+  jupyter-lab:
+    user: "1000:1000"
+    build:
+      context: ./docker/
+      dockerfile: dockerfile.jupyter
+    container_name: jupyter-lab
+    ports:
+      - "8888:8888"
+    environment:
+      - PYSPARK_PYTHON=python3
+      - SPARK_HOME=/usr/local/spark
+      - HADOOP_CONF_DIR=/usr/local/spark/conf
+    volumes:
+      - ./notebooks:/home/tavares/
+    networks:
+      - data-network
+  # Trino
+  trino:
+    image: trinodb/trino:latest
+    container_name: trino
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./trino/catalog:/etc/trino/catalog
+    networks:
+      - hadoop
+    depends_on:
+      - namenode
+      - spark-master
+
+  # Superset
+  superset:
+    image: apache/superset:latest
+    container_name: superset
+    environment:
+      - SUPERSET_LOAD_EXAMPLES=yes
+      - SUPERSET_SECRET_KEY=supersecret
+    ports:
+      - "8088:8088"
+    command: >
+      /bin/sh -c "
+      superset db upgrade &&
+      superset init &&
+      superset run -h 0.0.0.0 -p 8088"
+    networks:
+      - hadoop
+    depends_on:
+      - trino
+
+volumes:
+  hdfs-namenode:
+  hdfs-datanode:
+
+networks:
+  

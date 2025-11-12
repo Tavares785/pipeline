@@ -1,0 +1,35 @@
+FROM jupyter/pyspark-notebook
+
+USER root
+
+# Dependências úteis
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libssl-dev \
+    libffi-dev \
+    python3-dev \
+    libsasl2-dev
+
+# Bibliotecas Python principais
+RUN pip install --no-cache-dir \
+    pandas \
+    matplotlib \
+    findspark \
+    apache-superset \
+    psycopg2-binary
+
+# Adiciona Iceberg + Postgres para o Spark
+RUN wget -q https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-spark-runtime-3.3_2.12/1.6.1/iceberg-spark-runtime-3.3_2.12-1.6.1.jar -P /usr/local/spark/jars/
+RUN wget -q https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.2/postgresql-42.7.2.jar -P /usr/local/spark/jars/
+
+# Diretório do Superset
+RUN mkdir -p /app/superset_home
+ENV SUPERSET_HOME=/app/superset_home
+
+# Usuário tavares
+RUN useradd -ms /bin/bash -g 100 -u 1001 tavares && \
+    chown -R tavares:users /home/tavares && \
+    chown -R tavares:users /app/superset_home
+
+USER tavares
+WORKDIR /home/tavares/work

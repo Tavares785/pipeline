@@ -1,0 +1,33 @@
+# Requirements for Big Data Exercises
+# Execute: pip install -r requirements.txt
+
+# Core PySpark with Iceberg support
+pyspark==3.5.0
+
+# Iceberg dependencies (will be loaded as JARs in Spark session)
+# These are commented because they are typically added as JARs to Spark classpath
+# iceberg-spark-runtime-3.5_2.12
+# iceberg-spark-extensions-3.5_2.12
+
+# Optional: For data processing and analysis
+pandas>=2.0.0
+numpy>=1.24.0
+
+# For testing (optional)
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# For better CLI output
+colorama>=0.4.6
+rich>=13.0.0
+
+# Development dependencies (optional)
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.0.0
+
+# Documentation
+# Apache Iceberg JARs should be downloaded separately:
+# - iceberg-spark-runtime-3.5_2.12-1.4.2.jar
+# - iceberg-spark-extensions-3.5_2.12-1.4.2.jar
+# Add these to Spark classpath or --jars parameter
